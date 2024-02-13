@@ -1,0 +1,18 @@
+
+
+Version:	3.50
+CmdLine:	C:\Users\losgu\OneDrive\Insti\Programacion de procesos y servicios\Tema 4\Practicas\GestorFTP\launch4j\Test.exe --l4j-debug
+JNI:		No
+WOW64:		Yes
+Working dir:	C:\Users\losgu\OneDrive\Insti\Programacion de procesos y servicios\Tema 4\Practicas\GestorFTP\launch4j\.
+Requires JDK:	No
+Requires 64-Bit: No
+Java min ver:	
+Java max ver:	
+JRE paths:	C:\Program Files\OpenJDK\jdk-17.0.2
+Check launcher:	C:\Program Files\OpenJDK\jdk-17.0.2\bin\javaw.exe (OK)
+Version string: 1.017.000_002 / 64-Bit (OK)
+Launcher:	C:\Program Files\OpenJDK\jdk-17.0.2\bin\javaw.exe
+Launcher args:	-jar "C:\Users\losgu\OneDrive\Insti\Programacion de procesos y servicios\Tema 4\Practicas\GestorFTP\launch4j\Test.exe"
+Args length:	118/32768 chars
+Exit code:	0
