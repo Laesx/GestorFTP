@@ -1,6 +1,6 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/MainBackup.java to edit this template
  */
 package gestorftp;
 
@@ -16,10 +16,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTP;
 
@@ -111,17 +116,31 @@ public class GestorFTP extends Thread{
     }
 
     /** Sube un fichero al servidor FTP
-     * @param path Ruta del fichero local
+     * @param pathLocal Ruta del fichero local
      * @return true si el fichero se ha subido correctamente, false en caso contrario
      * @throws IOException No se puede subir el fichero
      */
-    public boolean subirFichero(String path) throws IOException {
-        File ficheroLocal = new File(path);
+    public boolean subirFichero(String pathLocal) throws IOException {
+        File ficheroLocal = new File(pathLocal);
         InputStream is = new FileInputStream(ficheroLocal);
         boolean enviado = clienteFTP.storeFile(ficheroLocal.getName(), is);
         is.close();
         return enviado;
     }
+
+    public boolean subirFichero(String pathLocal, String pathRemoto) throws IOException {
+        String remoteDirectory = Paths.get(pathRemoto).getParent().toString();
+        remoteDirectory = remoteDirectory.replace("\\", "/");
+        System.out.println("Comprobando directorio remoto: " + remoteDirectory);
+        comprobarDirectorioRemoto(remoteDirectory);
+
+        File ficheroLocal = new File(pathLocal);
+        InputStream is = new FileInputStream(ficheroLocal);
+        boolean enviado = clienteFTP.storeFile(pathRemoto, is);
+        is.close();
+        return enviado;
+    }
+
 
     /** Descarga un fichero del servidor FTP
      * @param ficheroRemoto Nombre del fichero a descargar
@@ -137,15 +156,70 @@ public class GestorFTP extends Thread{
         return recibido;
     }
 
+    public boolean comprobarDirectorioRemoto(String directoryPath) throws IOException {
+        String[] files = clienteFTP.listNames(directoryPath);
+        if (files != null) {
+            return true; // El directorio existe, devuelvo true
+        } else {
+            return clienteFTP.makeDirectory(directoryPath); // Crea el directorio y devuelve true si lo ha creado
+        }
+    }
+
     /** Lista los archivos de una carpeta remota
      * @param carpetaRemota Ruta de la carpeta remota
      * @return Lista de archivos de la carpeta remota
      * @throws IOException No se puede listar los archivos de la carpeta remota
      */
-    public String[] listarArchivos(String carpetaRemota) throws IOException{
-        String[] archivos;
-        archivos = clienteFTP.listNames(carpetaRemota);
-        return archivos;
+    public Set<String> listarArchivosOld(String carpetaRemota) throws IOException{
+        boolean directorio = comprobarDirectorioRemoto(carpetaRemota);
+        if (!directorio){
+            throw new IOException("No se ha podido crear el directorio remoto");
+        }
+
+        Set<String> setArchivos = new HashSet<>();
+        FTPFile[] directories =  clienteFTP.listDirectories(carpetaRemota);
+        String[] archivos = clienteFTP.listNames(carpetaRemota);
+
+        int respuesta = clienteFTP.getReplyCode();
+        // Si la carpeta no existe, la creamos
+        if (respuesta == FTPReply.FILE_UNAVAILABLE){
+            clienteFTP.makeDirectory(carpetaRemota);
+        } else if (!FTPReply.isPositiveCompletion(respuesta)) {
+            clienteFTP.disconnect();
+            throw new IOException("Error al listar los archivos en el servidor FTP");
+        }
+
+
+        if (archivos != null) {
+            // Eliminar el nombre de la carpeta remota de los archivos, para solo tener la lista de ellos.
+            for (int i = 0; i < archivos.length; i++) {
+                archivos[i] = archivos[i].replace(carpetaRemota + "/", "");
+            }
+            setArchivos.addAll(Arrays.asList(archivos));
+        }
+        return setArchivos;
+    }
+
+    public Set<String> listarArchivos(String carpetaRemota) throws IOException {
+        boolean directorio = comprobarDirectorioRemoto(carpetaRemota);
+        if (!directorio){
+            throw new IOException("No se ha podido crear el directorio remoto");
+        }
+    
+        Set<String> setArchivos = new HashSet<>();
+        FTPFile[] files = clienteFTP.listFiles(carpetaRemota);
+
+        for (FTPFile file : files) {
+            String nombreCompleto = carpetaRemota + "/" + file.getName();
+            if (file.isFile()) {
+                setArchivos.add(nombreCompleto);
+            } else if (file.isDirectory()) {
+                setArchivos.addAll(listarArchivos(nombreCompleto));
+            }
+        }
+
+        //System.out.println("Archivos remotos: " + setArchivos);
+        return setArchivos;
     }
 
     /** Borra un fichero del servidor FTP

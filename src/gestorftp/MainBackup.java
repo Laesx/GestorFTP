@@ -1,14 +1,8 @@
 package gestorftp;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Scanner;
 
-public class Main {
+public class MainBackup {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);

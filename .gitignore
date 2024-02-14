@@ -4,10 +4,14 @@ temp/
 *.zip
 *.tar.gz
 
+### Maven ###
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+### Ant ###
+out/
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
