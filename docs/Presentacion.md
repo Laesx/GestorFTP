@@ -29,8 +29,12 @@ sincronizar una carpeta local con una carpeta remota en el servidor FTP.
 ---
 
 ### Clase GestorFTP
-La clase GestorFTP es la encargada de gestionar la conexión con el servidor FTP. Esta clase se encarga de conectar y 
-desconectar del servidor, así como de realizar operaciones de FTP como subir y descargar archivos.
+La clase GestorFTP es la encargada de gestionar la conexión con el servidor FTP. Esta clase se encarga de conectarse y 
+desconectarse del servidor, así como de realizar operaciones de FTP como subir y descargar archivos.
+
+La podemos usar de 2 maneras:
+ - Crear una instancia, pasándole la carpeta que queremos enviar y luego iniciar el hilo, que conectará comprimirá y enviara el archivo.
+ - Crear una instancia vacía y usar los métodos que nos facilita.
 
 ---
 
@@ -65,6 +69,17 @@ En el log de FTP podemos ver como se realiza la conexión con el servidor FTP y 
 
 ---
 
+### Archivo creado
+Aquí podemos ver como nos ha creado un archivo temporal de la carpeta que hayamos indicado.
+
+![alt text](../image.png)
+
+Y como nos ha guardado el zip en el servidor FTP:
+
+![alt text](image-1.png)
+
+---
+
 ## 2.1. Análisis de funcionamiento (SincronizadorFTP)
 
 La clase SincronizadorFTP primero lee todos los archivos del remoto y de la carpeta local y los guarda en 2 sets de archivos.
@@ -85,14 +100,20 @@ En el log de FTP podemos ver como se realizan las operaciones con el servidor FT
 
 ---
 
+Si analizamos el log del FTP vemos que primero lista el directorio donde se van a guardar nuestro archivos, luego la aplicación lo compara con la lista de archivos que tiene del directorio local y si hay alguna modificación la refleja. Por ejemplo aquí guarda el archivo Hola.txt y borra title_t00.mkv.
+
+---
+
 ## 3. Pruebas
+
+Hice muchas pruebas
 
 ---
 
 ## 4. Propuesta de mejoras
 
-Una mejora que se podría implementar es que también compruebe la fecha de modificación de los archivos, 
-o que compruebe el hash para saber si los archivos han cambiado, pero tienen el mismo nombre y ubicación de antes.
+Una mejora que se podría implementar es que también compruebe 
+el hash de los archivos para saber si los archivos han cambiado o comprobar que todos los archivos se han copiado de forma integra en el directorio FTP.
 
 --- 
 

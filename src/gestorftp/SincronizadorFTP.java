@@ -1,5 +1,8 @@
 package gestorftp;
 
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+
 import java.io.*;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -50,6 +53,8 @@ public class SincronizadorFTP extends Thread {
 
                 Set<String> archivosModificadosOCreados = new HashSet<>(archivosLocales);
                 archivosModificadosOCreados.removeAll(archivosNoCambiados);
+                // Añadimos los archivos locales que se han actualizado
+                archivosModificadosOCreados.addAll(obtenerArchivosModificados(archivosLocales, archivosRemotos));
 
                 System.out.println("Archivos modificados o creados: " + archivosModificadosOCreados);
 
@@ -58,13 +63,16 @@ public class SincronizadorFTP extends Thread {
 
                 System.out.println("Archivos borrados: " + archivosBorrados);
 
+                // TODO Manejar carpetas
+
                 // Ejecutar las acciones correspondientes concurrentemente
+                // Aunque no tiene sentido ya que FTP solo acepta una operación a la vez
                 ExecutorService executor = Executors.newFixedThreadPool(1);
                 for (String archivo : archivosModificadosOCreados) {
                     executor.submit(() -> {
                         try {
                             System.out.println("Subiendo archivo local: " + carpetaLocal + "/" + archivo + "...");
-                            System.out.println("a remoto: " + carpetaRemota + "/" + archivo + "...");
+                            //System.out.println("a remoto: " + carpetaRemota + "/" + archivo + "...");
 
                             gestorFTP.subirFichero(carpetaLocal + "/" + archivo, carpetaRemota + "/" + archivo);
                         } catch (IOException e) {
@@ -105,6 +113,22 @@ public class SincronizadorFTP extends Thread {
 
     }
 
+    private Set<String> obtenerArchivosModificados(Set<String> archivosLocales, Set<String> archivosRemotos) throws IOException {
+
+        Set<String> archivosModificados = new HashSet<>();
+        for (String archivoLocal : archivosLocales) {
+            if (archivosRemotos.contains(archivoLocal)) {
+                // Aquí comprobar si el archivo ha sido modificado
+                if (gestorFTP.archivoActualizado(carpetaLocal + "/" + archivoLocal, carpetaRemota + "/" + archivoLocal)) {
+                    archivosModificados.add(archivoLocal);
+                    System.out.println("El archivo " + archivoLocal + " ha sido modificado");
+                }
+            }
+        }
+        return archivosModificados;
+    }
+
+
     private Set<String> obtenerArchivosLocalesOld() throws IOException {
         Set<String> archivos = new HashSet<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(carpetaLocal))) {
@@ -140,4 +164,5 @@ public class SincronizadorFTP extends Thread {
             }
         }
     }
+
 }

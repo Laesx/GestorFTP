@@ -15,13 +15,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -159,7 +157,7 @@ public class GestorFTP extends Thread{
     public boolean comprobarDirectorioRemoto(String directoryPath) throws IOException {
         String[] files = clienteFTP.listNames(directoryPath);
         if (files != null) {
-            return true; // El directorio existe, devuelvo true
+            return true; // El directorio existe, devuelve true
         } else {
             return clienteFTP.makeDirectory(directoryPath); // Crea el directorio y devuelve true si lo ha creado
         }
@@ -201,6 +199,7 @@ public class GestorFTP extends Thread{
     }
 
     public Set<String> listarArchivos(String carpetaRemota) throws IOException {
+        // Comprobamos que el directorio remoto exista, si no lo creamos
         boolean directorio = comprobarDirectorioRemoto(carpetaRemota);
         if (!directorio){
             throw new IOException("No se ha podido crear el directorio remoto");
@@ -208,6 +207,7 @@ public class GestorFTP extends Thread{
     
         Set<String> setArchivos = new HashSet<>();
         FTPFile[] files = clienteFTP.listFiles(carpetaRemota);
+        // Usar mListDir para listar archivos y directorios para comprobar
 
         for (FTPFile file : files) {
             String nombreCompleto = carpetaRemota + "/" + file.getName();
@@ -222,10 +222,62 @@ public class GestorFTP extends Thread{
         return setArchivos;
     }
 
+    /** Comprueba si un archivo local está actualizado en el servidor FTP
+     * @param archivoLocal Ruta del archivo local
+     * @param archivoRemoto Ruta del archivo remoto
+     * @throws IOException No se puede comprobar si el archivo local está actualizado
+     */
+    public boolean archivoActualizado(String archivoLocal, String archivoRemoto) throws IOException {
+        boolean actualizado = false;
+        // Comprobamos si el archivo local es más reciente que el remoto
+        File fileLocal = new File(archivoLocal);
+        long tiempoLocal = fileLocal.lastModified();
+        //Files.getLastModifiedTime(Paths.get(archivoLocal)).toMillis();
+        //System.out.println("DEBUG: REMOTO:" + archivoRemoto);
+        FTPFile fileRemoto = clienteFTP.mlistFile(archivoRemoto);
+        long tiempoRemoto = fileRemoto.getTimestamp().getTimeInMillis();
+        //System.out.println("DEBUG: Local: " + tiempoLocal + " Remoto: " + tiempoRemoto);
+        if (tiempoLocal > tiempoRemoto) {
+            // Subir el archivo
+            //subirFichero(archivoLocal, archivoRemoto);
+            actualizado = true;
+        }
+        /*
+        else if (tiempoLocal < tiempoRemoto) {
+            // Descargar el archivo
+            //descargarFichero(archivoRemoto, archivoLocal);
+
+        }
+         */
+
+        return actualizado;
+    }
+
     /** Borra un fichero del servidor FTP
      * @param s Nombre del fichero a borrar
      */
     public void borrarFichero(String s) throws IOException {
+        if (s == null || s.isEmpty()){
+            throw new IOException("El nombre del fichero no puede estar vacío");
+        }
+        /*
+        List<FTPFile> archivos = List.of(clienteFTP.mlistDir(s));
+
+        if (archivos.isEmpty()){
+            throw new IOException("El fichero no existe");
+        }
+
+        for (FTPFile archivo: archivos){
+            if (archivo.isDirectory()){
+                clienteFTP.rmd(s);
+            } else if (archivo.isFile()) {
+                clienteFTP.dele(s);
+            }
+        }
+        */
+
+        //clienteFTP.dele(s);
+        //clienteFTP.rmd(s);
         clienteFTP.deleteFile(s);
     }
 
