@@ -63,8 +63,6 @@ public class SincronizadorFTP extends Thread {
 
                 System.out.println("Archivos borrados: " + archivosBorrados);
 
-                // TODO Manejar carpetas
-
                 // Ejecutar las acciones correspondientes concurrentemente
                 // Aunque no tiene sentido ya que FTP solo acepta una operación a la vez
                 ExecutorService executor = Executors.newFixedThreadPool(1);
